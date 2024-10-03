@@ -1,47 +1,34 @@
 <template>
-  <h1>{{ title }}</h1>
-  <img :src="data.url" v-if="data.url"/>
+  <div>
+    <h1>{{ article.title }}</h1>
+    <img :src="article.url" v-if="article.url" alt="Article Image" />
+  </div>
 </template>
 
 <script>
 import axios from 'axios';
-import { ref, watch } from 'vue';
-import { useSeoMeta } from '#app';
 
 export default {
-  async setup() {
-    const data = ref({});
-    const title = ref('Home');
-
-    const getData = async () => {
-      try {
-        const response = await axios.get('https://jsonplaceholder.typicode.com/photos');
-        data.value = response.data[0];
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // Fetch data before rendering
-    await getData();
-
-    // Watch for changes in data and update SEO meta tags when data is loaded
-    watch(data, (newData) => {
-      if (newData && newData.url) {
-        useSeoMeta({
-          ogTitle: newData.title,
-          ogImage: newData.url,
-          ogDescription: newData.title,
-          googlebot: 'index, follow',
-          description: 'Selamat datang di Satpam! Jelajahi dunia informasi dan layanan terlengkap untuk memenuhi segala kebutuhan Anda.',
-          keywords: 'satpam,satpam2,nextsatpam',
-        });
-      }
-    });
-
+  // Mengambil data sebelum halaman dirender
+  async asyncData({ params }) {
+    // Gantikan URL dengan endpoint API yang benar
+    const { data } = await axios.get('https://jsonplaceholder.typicode.com/photos/1');
     return {
-      data,
-      title,
+      article: data, // Simpan data artikel yang diambil di state
+    };
+  },
+
+  // Mengatur meta tags di server
+  head() {
+    return {
+      title: this.article.title, // Gunakan judul dari artikel
+      meta: [
+        { hid: 'description', name: 'description', content: this.article.title },
+        { hid: 'og:title', property: 'og:title', content: this.article.title },
+        { hid: 'og:description', property: 'og:description', content: this.article.title },
+        { hid: 'og:image', property: 'og:image', content: this.article.url },
+        { hid: 'og:url', property: 'og:url', content: `https://satpam2-tau.vercel.app/articles/${this.article.id}` },
+      ],
     };
   },
 };
